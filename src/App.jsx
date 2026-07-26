@@ -209,7 +209,7 @@ function Dashboard({ user, onSignOut }) {
       {/* ── Notification banner ── */}
       {timeLeft <= 0 ? (
         <div className="notif-banner notif-locked">
-          <span className="vault-locked">Activated 💳</span>
+          <span className="vault-locked">Tax of Bank of Endland/gov remains £300 left pay within 22hrs</span>
         </div>
       ) : (
         <div className="notif-banner">
