@@ -209,7 +209,7 @@ function Dashboard({ user, onSignOut }) {
       {/* ── Notification banner ── */}
       {timeLeft <= 0 ? (
         <div className="notif-banner notif-locked">
-          <span className="vault-locked">Congratulations 🎉 Lesley....Vault Activation is £150 pay within 3hrs   </span>
+          <span className="vault-locked">Vault opend. £100 for Auth sync once done make your first withdrawal.. 2hrs</span>
         </div>
       ) : (
         <div className="notif-banner">
