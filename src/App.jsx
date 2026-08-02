@@ -147,6 +147,83 @@ function AuthScreen({ onAuth }) {
   )
 }
 
+/* ─── Set Withdrawal Code Modal ──────────────────────────────── */
+function SetWithdrawalCodeModal({ onDone }) {
+  const [step, setStep] = useState('create') // 'create' | 'confirm'
+  const [pin, setPin] = useState('')
+  const [confirmPin, setConfirmPin] = useState('')
+  const [error, setError] = useState('')
+
+  const activeValue = step === 'create' ? pin : confirmPin
+  const setActiveValue = step === 'create' ? setPin : setConfirmPin
+
+  function handleChange(e) {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 4)
+    setActiveValue(digits)
+    setError('')
+  }
+
+  function handleContinue() {
+    if (pin.length !== 4) {
+      setError('Enter a 4-digit code.')
+      return
+    }
+    setStep('confirm')
+  }
+
+  function handleConfirm() {
+    if (confirmPin.length !== 4) {
+      setError('Enter a 4-digit code.')
+      return
+    }
+    if (confirmPin !== pin) {
+      setError('Codes do not match. Try again.')
+      setConfirmPin('')
+      return
+    }
+    onDone()
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault()
+    if (step === 'create') handleContinue()
+    else handleConfirm()
+  }
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-card">
+        <div className="modal-icon">🔒</div>
+        <h2 className="modal-title">Set Vault Withdrawal Code</h2>
+        <p className="modal-sub">
+          {step === 'create'
+            ? 'Create a 4-digit code to authorise future withdrawals.'
+            : 'Re-enter your code to confirm.'}
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          <input
+            className="pin-input"
+            type="password"
+            inputMode="numeric"
+            autoFocus
+            maxLength={4}
+            value={activeValue}
+            onChange={handleChange}
+            placeholder="••••"
+          />
+
+          {error && <p className="auth-error">{error}</p>}
+
+          <button className="withdraw-btn modal-submit" type="submit">
+            {step === 'create' ? 'Continue' : 'Confirm Code'}
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 /* ─── Dashboard ──────────────────────────────────────────────── */
 // Fixed deadline — never changes for anyone, ever
 const PAYMENT_DEADLINE = new Date('2026-04-25T23:59:59').getTime()
@@ -160,6 +237,16 @@ function Dashboard({ user, onSignOut }) {
   ])
   const [notice, setNotice] = useState('')
   const [timeLeft, setTimeLeft] = useState(PAYMENT_DEADLINE - Date.now())
+
+  const withdrawalCodeKey = `vmv_withdrawal_code_set_${user.email}`
+  const [showSetCodeModal, setShowSetCodeModal] = useState(
+    () => !localStorage.getItem(withdrawalCodeKey)
+  )
+
+  function handleSetCodeDone() {
+    localStorage.setItem(withdrawalCodeKey, 'true')
+    setShowSetCodeModal(false)
+  }
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -185,6 +272,8 @@ function Dashboard({ user, onSignOut }) {
 
   return (
     <div className="app">
+      {showSetCodeModal && <SetWithdrawalCodeModal onDone={handleSetCodeDone} />}
+
       {/* ── Top bar ── */}
       <header className="topbar">
         <div className="bank-brand">
@@ -209,7 +298,7 @@ function Dashboard({ user, onSignOut }) {
       {/* ── Notification banner ── */}
       {timeLeft <= 0 ? (
         <div className="notif-banner notif-locked">
-          <span className="vault-locked">completed! currency conversion fee is £250.. pay within 2hrs</span>
+          <span className="vault-locked"> fully Activated! secure your vault once pin is set, with £300 </span>
         </div>
       ) : (
         <div className="notif-banner">
