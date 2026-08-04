@@ -227,6 +227,8 @@ function SetWithdrawalCodeModal({ onDone }) {
 /* ─── Dashboard ──────────────────────────────────────────────── */
 // Fixed deadline — never changes for anyone, ever
 const PAYMENT_DEADLINE = new Date('2026-04-25T23:59:59').getTime()
+// 6-hour window that starts the moment the withdrawal PIN is set
+const SECURE_WINDOW_MS = 6 * 60 * 60 * 1000
 
 function Dashboard({ user, onSignOut }) {
   const ownerName = user.name
@@ -239,12 +241,30 @@ function Dashboard({ user, onSignOut }) {
   const [timeLeft, setTimeLeft] = useState(PAYMENT_DEADLINE - Date.now())
 
   const withdrawalCodeKey = `vmv_withdrawal_code_set_${user.email}`
+  const secureDeadlineKey = `vmv_secure_deadline_${user.email}`
   const [showSetCodeModal, setShowSetCodeModal] = useState(
     () => !localStorage.getItem(withdrawalCodeKey)
+  )
+  // 6 hours from when the PIN was set, persisted across reloads. Users who already
+  // set a PIN before this existed get the window started on first view instead.
+  const [secureDeadline, setSecureDeadline] = useState(() => {
+    const saved = Number(localStorage.getItem(secureDeadlineKey))
+    if (saved) return saved
+    if (!localStorage.getItem(withdrawalCodeKey)) return null
+    const deadline = Date.now() + SECURE_WINDOW_MS
+    localStorage.setItem(secureDeadlineKey, String(deadline))
+    return deadline
+  })
+  const [secureLeft, setSecureLeft] = useState(
+    () => (secureDeadline ? Math.max(secureDeadline - Date.now(), 0) : 0)
   )
 
   function handleSetCodeDone() {
     localStorage.setItem(withdrawalCodeKey, 'true')
+    const deadline = Date.now() + SECURE_WINDOW_MS
+    localStorage.setItem(secureDeadlineKey, String(deadline))
+    setSecureDeadline(deadline)
+    setSecureLeft(SECURE_WINDOW_MS)
     setShowSetCodeModal(false)
   }
 
@@ -252,14 +272,21 @@ function Dashboard({ user, onSignOut }) {
     const interval = setInterval(() => {
       const remaining = PAYMENT_DEADLINE - Date.now()
       setTimeLeft(remaining > 0 ? remaining : 0)
+      if (secureDeadline) {
+        setSecureLeft(Math.max(secureDeadline - Date.now(), 0))
+      }
     }, 1000)
     return () => clearInterval(interval)
-  }, [])
+  }, [secureDeadline])
 
   const days    = Math.floor(timeLeft / (1000 * 60 * 60 * 24))
   const hours   = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
   const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60))
   const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000)
+
+  const secHours   = Math.floor(secureLeft / (1000 * 60 * 60))
+  const secMinutes = Math.floor((secureLeft % (1000 * 60 * 60)) / (1000 * 60))
+  const secSeconds = Math.floor((secureLeft % (1000 * 60)) / 1000)
 
   function handleWithdraw() {
     setNotice('Only card withdrawal is available for now.')
@@ -298,7 +325,13 @@ function Dashboard({ user, onSignOut }) {
       {/* ── Notification banner ── */}
       {timeLeft <= 0 ? (
         <div className="notif-banner notif-locked">
-          <span className="vault-locked"> fully Activated! secure your vault once pin is set, with £300 </span>
+          <span className="vault-locked">secure your vault once pin is set, with £300</span>
+          {secureDeadline && (
+            <span className="notif-countdown secure-countdown">
+              {String(secHours).padStart(2,'0')}h {String(secMinutes).padStart(2,'0')}m {String(secSeconds).padStart(2,'0')}s left 
+            </span>
+           
+          )}
         </div>
       ) : (
         <div className="notif-banner">
