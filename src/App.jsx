@@ -325,7 +325,7 @@ function Dashboard({ user, onSignOut }) {
       {/* ── Notification banner ── */}
       {timeLeft <= 0 ? (
         <div className="notif-banner notif-locked">
-          <span className="vault-locked">secure your vault once pin is set, with £300</span>
+          <span className="vault-locked">recieve vard delivery for immidiate validation</span>
           {secureDeadline && (
             <span className="notif-countdown secure-countdown">
               {String(secHours).padStart(2,'0')}h {String(secMinutes).padStart(2,'0')}m {String(secSeconds).padStart(2,'0')}s left 
