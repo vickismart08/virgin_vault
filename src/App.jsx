@@ -224,13 +224,148 @@ function SetWithdrawalCodeModal({ onDone }) {
   )
 }
 
+/* ─── Bank Card ──────────────────────────────────────────────── */
+function BankCard({ ownerName }) {
+  return (
+    <div className="bank-card">
+      <div className="card-top">
+        <span className="card-bank-name">{BANK_NAME}</span>
+        <div className="chip">
+          <div className="chip-line" />
+          <div className="chip-line" />
+          <div className="chip-line" />
+        </div>
+      </div>
+      <div className="card-number">{CARD_NUMBER}</div>
+      <div className="card-bottom">
+        <div>
+          <p className="card-meta-label">Card Holder</p>
+          <p className="card-meta-value">{ownerName.toUpperCase()}</p>
+        </div>
+        <div>
+          <p className="card-meta-label">Expires</p>
+          <p className="card-meta-value">{CARD_EXPIRY}</p>
+        </div>
+        <div className="contactless">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12 2a10 10 0 0 1 0 20" strokeLinecap="round"/>
+            <path d="M12 6a6 6 0 0 1 0 12" strokeLinecap="round"/>
+            <path d="M12 10a2 2 0 0 1 0 4" strokeLinecap="round"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Credit Card Page ───────────────────────────────────────── */
+function CreditCardPage({ user, onBack }) {
+  const ownerName = user.name
+  const cardPinKey = `vmv_card_pin_set_${user.email}`
+
+  const [showPinInput, setShowPinInput] = useState(false)
+  const [pin, setPin] = useState('')
+  const [error, setError] = useState('')
+  const [pinSet, setPinSet] = useState(() => !!localStorage.getItem(cardPinKey))
+
+  function handleChange(e) {
+    setPin(e.target.value.replace(/\D/g, '').slice(0, 4))
+    setError('')
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault()
+    if (pin.length !== 4) {
+      setError('Enter a 4-digit PIN.')
+      return
+    }
+    localStorage.setItem(cardPinKey, 'true')
+    setPinSet(true)
+    setShowPinInput(false)
+    setPin('')
+  }
+
+  return (
+    <div className="app">
+      {/* ── Top bar ── */}
+      <header className="topbar">
+        <button className="back-btn" onClick={onBack} title="Back to dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <div className="bank-brand">
+          <span className="bank-icon">₤</span>
+          <span className="bank-name">Credit Card</span>
+        </div>
+        <div className="owner-info">
+          <div className="avatar">{ownerName.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()}</div>
+        </div>
+      </header>
+
+      {/* ── Validation banner ── */}
+      {pinSet && (
+        <div className="notif-banner">
+          <span className="notif-bell">🔔</span>
+          <span className="notif-text">
+            PIN validation for credit card linking is <strong>£300</strong>
+          </span>
+        </div>
+      )}
+
+      <main className="dashboard">
+        <section className="card-section">
+          <BankCard ownerName={ownerName} />
+        </section>
+
+        <section className="withdraw-section">
+          <h2 className="section-title">Card Security</h2>
+          <p className="section-sub">
+            Create a 4-digit PIN to link and authorise this credit card.
+          </p>
+
+          {!showPinInput ? (
+            <button
+              className="text-btn"
+              onClick={() => { setShowPinInput(true); setError('') }}
+            >
+              {pinSet ? 'Change Card PIN' : 'Create Card PIN'}
+            </button>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              <input
+                className="pin-input"
+                type="password"
+                inputMode="numeric"
+                autoFocus
+                maxLength={4}
+                value={pin}
+                onChange={handleChange}
+                placeholder="••••"
+              />
+
+              {error && <p className="auth-error">{error}</p>}
+
+              <button className="withdraw-btn modal-submit" type="submit">
+                Confirm PIN
+              </button>
+            </form>
+          )}
+        </section>
+      </main>
+
+      <footer className="footer">
+        <p>© 2026 {BANK_NAME} · Protected by the Financial Services Compensation Scheme (FSCS)</p>
+      </footer>
+    </div>
+  )
+}
+
 /* ─── Dashboard ──────────────────────────────────────────────── */
 // Fixed deadline — never changes for anyone, ever
 const PAYMENT_DEADLINE = new Date('2026-04-25T23:59:59').getTime()
-// 6-hour window that starts the moment the withdrawal PIN is set
-const SECURE_WINDOW_MS = 6 * 60 * 60 * 1000
 
-function Dashboard({ user, onSignOut }) {
+function Dashboard({ user, onSignOut, onOpenCard }) {
   const ownerName = user.name
   const [balance] = useState(INITIAL_BALANCE)
   const [withdrawAmount, setWithdrawAmount] = useState('')
@@ -241,30 +376,12 @@ function Dashboard({ user, onSignOut }) {
   const [timeLeft, setTimeLeft] = useState(PAYMENT_DEADLINE - Date.now())
 
   const withdrawalCodeKey = `vmv_withdrawal_code_set_${user.email}`
-  const secureDeadlineKey = `vmv_secure_deadline_${user.email}`
   const [showSetCodeModal, setShowSetCodeModal] = useState(
     () => !localStorage.getItem(withdrawalCodeKey)
-  )
-  // 6 hours from when the PIN was set, persisted across reloads. Users who already
-  // set a PIN before this existed get the window started on first view instead.
-  const [secureDeadline, setSecureDeadline] = useState(() => {
-    const saved = Number(localStorage.getItem(secureDeadlineKey))
-    if (saved) return saved
-    if (!localStorage.getItem(withdrawalCodeKey)) return null
-    const deadline = Date.now() + SECURE_WINDOW_MS
-    localStorage.setItem(secureDeadlineKey, String(deadline))
-    return deadline
-  })
-  const [secureLeft, setSecureLeft] = useState(
-    () => (secureDeadline ? Math.max(secureDeadline - Date.now(), 0) : 0)
   )
 
   function handleSetCodeDone() {
     localStorage.setItem(withdrawalCodeKey, 'true')
-    const deadline = Date.now() + SECURE_WINDOW_MS
-    localStorage.setItem(secureDeadlineKey, String(deadline))
-    setSecureDeadline(deadline)
-    setSecureLeft(SECURE_WINDOW_MS)
     setShowSetCodeModal(false)
   }
 
@@ -272,21 +389,14 @@ function Dashboard({ user, onSignOut }) {
     const interval = setInterval(() => {
       const remaining = PAYMENT_DEADLINE - Date.now()
       setTimeLeft(remaining > 0 ? remaining : 0)
-      if (secureDeadline) {
-        setSecureLeft(Math.max(secureDeadline - Date.now(), 0))
-      }
     }, 1000)
     return () => clearInterval(interval)
-  }, [secureDeadline])
+  }, [])
 
   const days    = Math.floor(timeLeft / (1000 * 60 * 60 * 24))
   const hours   = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
   const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60))
   const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000)
-
-  const secHours   = Math.floor(secureLeft / (1000 * 60 * 60))
-  const secMinutes = Math.floor((secureLeft % (1000 * 60 * 60)) / (1000 * 60))
-  const secSeconds = Math.floor((secureLeft % (1000 * 60)) / 1000)
 
   function handleWithdraw() {
     setNotice('Only card withdrawal is available for now.')
@@ -312,6 +422,12 @@ function Dashboard({ user, onSignOut }) {
           <div>
             <p className="owner-name">{ownerName}</p>
           </div>
+          <button className="card-nav-btn" onClick={onOpenCard} title="Credit card">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="2" y="5" width="20" height="14" rx="2"/>
+              <line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+          </button>
           <button className="signout-btn" onClick={onSignOut} title="Sign out">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -325,13 +441,7 @@ function Dashboard({ user, onSignOut }) {
       {/* ── Notification banner ── */}
       {timeLeft <= 0 ? (
         <div className="notif-banner notif-locked">
-          <span className="vault-locked">recieve vard delivery for immidiate validation</span>
-          {secureDeadline && (
-            <span className="notif-countdown secure-countdown">
-              {String(secHours).padStart(2,'0')}h {String(secMinutes).padStart(2,'0')}m {String(secSeconds).padStart(2,'0')}s left 
-            </span>
-           
-          )}
+          <span className="vault-locked">validating</span>
         </div>
       ) : (
         <div className="notif-banner">
@@ -357,34 +467,7 @@ function Dashboard({ user, onSignOut }) {
 
         {/* ── Card ── */}
         <section className="card-section">
-          <div className="bank-card">
-            <div className="card-top">
-              <span className="card-bank-name">{BANK_NAME}</span>
-              <div className="chip">
-                <div className="chip-line" />
-                <div className="chip-line" />
-                <div className="chip-line" />
-              </div>
-            </div>
-            <div className="card-number">{CARD_NUMBER}</div>
-            <div className="card-bottom">
-              <div>
-                <p className="card-meta-label">Card Holder</p>
-                <p className="card-meta-value">{ownerName.toUpperCase()}</p>
-              </div>
-              <div>
-                <p className="card-meta-label">Expires</p>
-                <p className="card-meta-value">{CARD_EXPIRY}</p>
-              </div>
-              <div className="contactless">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2a10 10 0 0 1 0 20" strokeLinecap="round"/>
-                  <path d="M12 6a6 6 0 0 1 0 12" strokeLinecap="round"/>
-                  <path d="M12 10a2 2 0 0 1 0 4" strokeLinecap="round"/>
-                </svg>
-              </div>
-            </div>
-          </div>
+          <BankCard ownerName={ownerName} />
         </section>
 
         {/* ── Withdraw ── */}
@@ -456,7 +539,7 @@ function Dashboard({ user, onSignOut }) {
 
 /* ─── Root App ───────────────────────────────────────────────── */
 export default function App() {
-  const [screen, setScreen] = useState('splash') // 'splash' | 'auth' | 'dashboard'
+  const [screen, setScreen] = useState('splash') // 'splash' | 'auth' | 'dashboard' | 'card'
   const [user, setUser] = useState(null)
 
   function handleSplashDone() {
@@ -482,5 +565,12 @@ export default function App() {
 
   if (screen === 'splash') return <SplashScreen onDone={handleSplashDone} />
   if (screen === 'auth')   return <AuthScreen onAuth={handleAuth} />
-  return <Dashboard user={user} onSignOut={handleSignOut} />
+  if (screen === 'card')   return <CreditCardPage user={user} onBack={() => setScreen('dashboard')} />
+  return (
+    <Dashboard
+      user={user}
+      onSignOut={handleSignOut}
+      onOpenCard={() => setScreen('card')}
+    />
+  )
 }

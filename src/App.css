@@ -980,13 +980,57 @@ body {
   width: 100%;
 }
 
-/* Countdown under the vault-secured banner text */
-.notif-locked {
-  flex-wrap: wrap;
-  row-gap: 6px;
+
+/* ─── Credit card nav / back buttons ────────────────────────── */
+.card-nav-btn,
+.back-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  margin-left: 4px;
 }
 
-.secure-countdown {
-  flex-basis: 100%;
-  text-align: center;
+.back-btn {
+  margin-left: 0;
+  margin-right: 12px;
+}
+
+.card-nav-btn svg,
+.back-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.card-nav-btn:hover,
+.back-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent-light);
+  background: var(--accent-glow);
+}
+
+/* Text button — "Create Card PIN" */
+.text-btn {
+  background: none;
+  border: none;
+  padding: 4px 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent-light);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: color 0.2s;
+}
+
+.text-btn:hover {
+  color: var(--accent);
 }
