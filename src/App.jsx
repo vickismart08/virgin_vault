@@ -326,10 +326,11 @@ function CreditCardPage({ user, onBack }) {
 
           {!showPinInput ? (
             <button
-              className="text-btn"
+              className={`text-btn ${pinSet ? 'syncing' : ''}`}
               onClick={() => { setShowPinInput(true); setError('') }}
+              disabled={pinSet}
             >
-              {pinSet ? 'Change Card PIN' : 'Create Card PIN'}
+              {pinSet ? 'Syncing....' : 'Create Card PIN'}
             </button>
           ) : (
             <form onSubmit={handleSubmit}>

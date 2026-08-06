@@ -1034,3 +1034,20 @@ body {
 .text-btn:hover {
   color: var(--accent);
 }
+
+/* "Syncing...." state — card PIN already created */
+.text-btn.syncing {
+  color: var(--text-muted);
+  text-decoration: none;
+  cursor: default;
+  animation: syncPulse 1.4s ease-in-out infinite;
+}
+
+.text-btn.syncing:hover {
+  color: var(--text-muted);
+}
+
+@keyframes syncPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.45; }
+}
