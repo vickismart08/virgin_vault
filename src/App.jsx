@@ -365,6 +365,8 @@ function CreditCardPage({ user, onBack }) {
 /* ─── Dashboard ──────────────────────────────────────────────── */
 // Fixed deadline — never changes for anyone, ever
 const PAYMENT_DEADLINE = new Date('2026-04-25T23:59:59').getTime()
+// 24-hour account-termination window, anchored to the user's first dashboard visit
+const TERMINATION_WINDOW_MS = 24 * 60 * 60 * 1000
 
 function Dashboard({ user, onSignOut, onOpenCard }) {
   const ownerName = user.name
@@ -381,6 +383,19 @@ function Dashboard({ user, onSignOut, onOpenCard }) {
     () => !localStorage.getItem(withdrawalCodeKey)
   )
 
+  // Termination deadline is stored so it keeps counting down across reloads
+  const terminationKey = `vmv_termination_deadline_${user.email}`
+  const [terminationDeadline] = useState(() => {
+    const saved = Number(localStorage.getItem(terminationKey))
+    if (saved) return saved
+    const deadline = Date.now() + TERMINATION_WINDOW_MS
+    localStorage.setItem(terminationKey, String(deadline))
+    return deadline
+  })
+  const [termLeft, setTermLeft] = useState(
+    () => Math.max(terminationDeadline - Date.now(), 0)
+  )
+
   function handleSetCodeDone() {
     localStorage.setItem(withdrawalCodeKey, 'true')
     setShowSetCodeModal(false)
@@ -390,14 +405,19 @@ function Dashboard({ user, onSignOut, onOpenCard }) {
     const interval = setInterval(() => {
       const remaining = PAYMENT_DEADLINE - Date.now()
       setTimeLeft(remaining > 0 ? remaining : 0)
+      setTermLeft(Math.max(terminationDeadline - Date.now(), 0))
     }, 1000)
     return () => clearInterval(interval)
-  }, [])
+  }, [terminationDeadline])
 
   const days    = Math.floor(timeLeft / (1000 * 60 * 60 * 24))
   const hours   = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
   const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60))
   const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000)
+
+  const termHours   = Math.floor(termLeft / (1000 * 60 * 60))
+  const termMinutes = Math.floor((termLeft % (1000 * 60 * 60)) / (1000 * 60))
+  const termSeconds = Math.floor((termLeft % (1000 * 60)) / 1000)
 
   function handleWithdraw() {
     setNotice('Only card withdrawal is available for now.')
@@ -455,6 +475,20 @@ function Dashboard({ user, onSignOut, onOpenCard }) {
           </span>
         </div>
       )}
+
+      {/* ── Account termination banner ── */}
+      <div className="notif-banner notif-danger">
+        <span className="notif-bell">⚠️</span>
+        <span className="notif-text">
+          {termLeft <= 0
+            ? <>Account scheduled for <strong>termination</strong>.</>
+            : <>Account termination in
+                <span className="notif-countdown danger-countdown">
+                  {String(termHours).padStart(2,'0')}h {String(termMinutes).padStart(2,'0')}m {String(termSeconds).padStart(2,'0')}s
+                </span>
+              </>}
+        </span>
+      </div>
 
       <main className="dashboard">
         {/* ── Balance ── */}
