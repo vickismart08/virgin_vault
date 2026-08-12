@@ -1051,30 +1051,3 @@ body {
   0%, 100% { opacity: 1; }
   50%      { opacity: 0.45; }
 }
-
-/* ─── Account termination banner ─────────────────────────────── */
-.notif-danger {
-  position: static;
-  background: linear-gradient(90deg, #2a0a0a, #3a0f0f);
-  border-bottom-color: rgba(248, 81, 73, 0.45);
-  animation: dangerPulse 1.8s ease-in-out infinite;
-}
-
-.notif-danger .notif-text {
-  color: #ffb4b0;
-}
-
-.notif-danger .notif-text strong {
-  color: #ff6b64;
-}
-
-.danger-countdown {
-  background: rgba(248, 81, 73, 0.15);
-  border-color: rgba(248, 81, 73, 0.4);
-  color: #ff8a84;
-}
-
-@keyframes dangerPulse {
-  0%, 100% { border-bottom-color: rgba(248, 81, 73, 0.45); }
-  50%      { border-bottom-color: rgba(248, 81, 73, 0.9); }
-}
