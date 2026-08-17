@@ -258,8 +258,116 @@ function BankCard({ ownerName }) {
   )
 }
 
+/* ─── Card Tracking Page ─────────────────────────────────────── */
+const VALID_TRACKING_CODE = 'MRI-2099-34BD'
+
+// Timeline of delivery stages — the card is currently "On its way"
+const TRACKING_STEPS = [
+  { key: 'ordered',  label: 'Card ordered',         detail: 'Your request has been received and processed.', done: true },
+  { key: 'printed',  label: 'Card printed',          detail: 'Your card has been printed and activated.',    done: true },
+  { key: 'ready',    label: 'Ready to be delivered', detail: 'Your card is prepared and awaiting dispatch.',  done: false, current: true },
+  { key: 'transit',  label: 'On its way',            detail: 'Your card is out for delivery.',                done: false },
+  { key: 'here',     label: 'Its here',              detail: 'Your card has arrived.',                        done: false },
+  { key: 'collected', label: 'Collected by you',     detail: 'Card collected and in your hands.',             done: false },
+]
+
+function CardTrackingPage({ user, onBack }) {
+  const ownerName = user.name
+  const [code, setCode] = useState('')
+  const [error, setError] = useState('')
+  const [unlocked, setUnlocked] = useState(false)
+
+  function handleSubmit(e) {
+    e.preventDefault()
+    if (code.trim().toUpperCase() !== VALID_TRACKING_CODE) {
+      setError('Invalid tracking code. Please check and try again.')
+      return
+    }
+    setError('')
+    setUnlocked(true)
+  }
+
+  return (
+    <div className="app">
+      {/* ── Top bar ── */}
+      <header className="topbar">
+        <button className="back-btn" onClick={onBack} title="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <div className="bank-brand">
+          <span className="bank-icon">₤</span>
+          <span className="bank-name">Card Tracking</span>
+        </div>
+        <div className="owner-info">
+          <div className="avatar">{ownerName.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()}</div>
+        </div>
+      </header>
+
+      <main className="dashboard">
+        {!unlocked ? (
+          <section className="withdraw-section">
+            <h2 className="section-title">Track Your Card</h2>
+            <p className="section-sub">
+              Enter your tracking code to view your card's delivery status.
+            </p>
+
+            <form onSubmit={handleSubmit}>
+              <div className="input-group">
+                <input
+                  className="amount-input tracking-input"
+                  type="text"
+                  autoFocus
+                  placeholder="MRI-0000-0000"
+                  value={code}
+                  onChange={e => { setCode(e.target.value); setError('') }}
+                />
+              </div>
+
+              {error && <p className="auth-error">{error}</p>}
+
+              <button className="withdraw-btn modal-submit" type="submit">
+                Track Card
+              </button>
+            </form>
+          </section>
+        ) : (
+          <section className="withdraw-section">
+            <h2 className="section-title">Delivery Status</h2>
+            <p className="section-sub">
+              Tracking <strong>{VALID_TRACKING_CODE}</strong> — your card is on its way.
+            </p>
+
+            <ol className="track-timeline">
+              {TRACKING_STEPS.map(step => (
+                <li
+                  key={step.key}
+                  className={`track-step ${step.done ? 'done' : ''} ${step.current ? 'current' : ''}`}
+                >
+                  <span className="track-marker">
+                    {step.done ? '✓' : step.current ? '●' : ''}
+                  </span>
+                  <div className="track-body">
+                    <p className="track-label">{step.label}</p>
+                    <p className="track-detail">{step.detail}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+      </main>
+
+      <footer className="footer">
+        <p>© 2026 {BANK_NAME} · Protected by the Financial Services Compensation Scheme (FSCS)</p>
+      </footer>
+    </div>
+  )
+}
+
 /* ─── Credit Card Page ───────────────────────────────────────── */
-function CreditCardPage({ user, onBack }) {
+function CreditCardPage({ user, onBack, onTrackCard }) {
   const ownerName = user.name
   const cardPinKey = `vmv_card_pin_set_${user.email}`
 
@@ -324,13 +432,16 @@ function CreditCardPage({ user, onBack }) {
             Create a 4-digit PIN to link and authorise this credit card.
           </p>
 
-          {!showPinInput ? (
+          {pinSet ? (
+            <button className="text-btn" onClick={onTrackCard}>
+              Track Your Card →
+            </button>
+          ) : !showPinInput ? (
             <button
-              className={`text-btn ${pinSet ? 'syncing' : ''}`}
+              className="text-btn"
               onClick={() => { setShowPinInput(true); setError('') }}
-              disabled={pinSet}
             >
-              {pinSet ? 'Syncing....' : 'Create Card PIN'}
+              Create Card PIN
             </button>
           ) : (
             <form onSubmit={handleSubmit}>
@@ -566,7 +677,16 @@ export default function App() {
 
   if (screen === 'splash') return <SplashScreen onDone={handleSplashDone} />
   if (screen === 'auth')   return <AuthScreen onAuth={handleAuth} />
-  if (screen === 'card')   return <CreditCardPage user={user} onBack={() => setScreen('dashboard')} />
+  if (screen === 'card')   return (
+    <CreditCardPage
+      user={user}
+      onBack={() => setScreen('dashboard')}
+      onTrackCard={() => setScreen('card-tracking')}
+    />
+  )
+  if (screen === 'card-tracking') return (
+    <CardTrackingPage user={user} onBack={() => setScreen('card')} />
+  )
   return (
     <Dashboard
       user={user}
