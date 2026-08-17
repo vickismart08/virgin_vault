@@ -265,8 +265,8 @@ const VALID_TRACKING_CODE = 'MRI-2099-34BD'
 const TRACKING_STEPS = [
   { key: 'ordered',  label: 'Card ordered',         detail: 'Your request has been received and processed.', done: true },
   { key: 'printed',  label: 'Card printed',          detail: 'Your card has been printed and activated.',    done: true },
-  { key: 'ready',    label: 'Ready to be delivered', detail: 'Your card is prepared and awaiting dispatch.',  done: false, current: true },
-  { key: 'transit',  label: 'On its way',            detail: 'Your card is out for delivery.',                done: false },
+  { key: 'ready',    label: 'Ready to be delivered', detail: 'Your card is prepared and awaiting dispatch.',  done: true },
+  { key: 'transit',  label: 'On its way',            detail: 'Your card is out for delivery.',                done: false, current: true },
   { key: 'here',     label: 'Its here',              detail: 'Your card has arrived.',                        done: false },
   { key: 'collected', label: 'Collected by you',     detail: 'Card collected and in your hands.',             done: false },
 ]
