@@ -411,16 +411,6 @@ function CreditCardPage({ user, onBack, onTrackCard }) {
         </div>
       </header>
 
-      {/* ── Validation banner ── */}
-      {pinSet && (
-        <div className="notif-banner">
-          <span className="notif-bell">🔔</span>
-          <span className="notif-text">
-            PIN validation for credit card linking is <strong>£300</strong>
-          </span>
-        </div>
-      )}
-
       <main className="dashboard">
         <section className="card-section">
           <BankCard ownerName={ownerName} />
