@@ -1143,3 +1143,13 @@ body {
   margin: 2px 0 0;
   line-height: 1.4;
 }
+
+/* Card Active label */
+.card-active {
+  font-size: 11px;
+  font-weight: 700;
+  color: #3fb950;
+  letter-spacing: 0.5px;
+  margin-left: auto;
+  margin-right: 12px;
+}
