@@ -230,7 +230,7 @@ function BankCard({ ownerName, active }) {
     <div className="bank-card">
       <div className="card-top">
         <span className="card-bank-name">{BANK_NAME}</span>
-        {active && <span className="card-active">● Card Active</span>}
+        {active && <span className="card-active">● Card Dactivated</span>}
         <div className="chip">
           <div className="chip-line" />
           <div className="chip-line" />
