@@ -367,6 +367,83 @@ function CardTrackingPage({ user, onBack }) {
   )
 }
 
+/* ─── Insurance Policy Modal ─────────────────────────────────── */
+function InsurancePolicyModal({ agreed, onToggle, onClose }) {
+  return (
+    <div className="modal-overlay">
+      <div className="modal-card policy-card">
+        <div className="modal-icon">🛡️</div>
+        <h2 className="modal-title">Card Insurance Policy</h2>
+        <p className="modal-sub">
+          Please review how your {BANK_NAME} card is protected before you continue.
+        </p>
+
+        <div className="policy-body">
+          <div className="policy-item">
+            <span className="policy-item-icon">🚫</span>
+            <div>
+              <p className="policy-item-title">If your card is stolen</p>
+              <p className="policy-item-text">
+                A stolen card must be reported and <strong>blocked immediately</strong> to
+                prevent fraudulent transactions. Any activity before the block is
+                reported is the cardholder's responsibility.
+              </p>
+            </div>
+          </div>
+
+          <div className="policy-item">
+            <span className="policy-item-icon">🔎</span>
+            <div>
+              <p className="policy-item-title">If your card is lost</p>
+              <p className="policy-item-text">
+                A lost card can be recovered or replaced, but restoration
+                <strong> carries a significant cost</strong> covering re-verification,
+                secure re-issuance and delivery.
+              </p>
+            </div>
+          </div>
+
+          <div className="policy-item">
+            <span className="policy-item-icon">💥</span>
+            <div>
+              <p className="policy-item-title">If your card is damaged</p>
+              <p className="policy-item-text">
+                Any physical or chip damage <strong>must be reported to {BANK_NAME}</strong> so
+                the card can be assessed and safely replaced.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="policy-terms">
+          <p className="policy-terms-title">Terms &amp; Conditions</p>
+          <p className="policy-terms-text">
+            In the event of loss, theft or damage, the cardholder agrees to a penalty of
+            <strong> one (1) month re-issuance</strong>, during which the card remains
+            suspended. A <strong>restoration fine</strong>, applicable
+            <strong> tax</strong> and all other associated processing charges will apply
+            before a replacement card is activated. {BANK_NAME} reserves the right to
+            revise these charges at any time.
+          </p>
+        </div>
+
+        <label className="policy-agree">
+          <input type="checkbox" checked={agreed} onChange={onToggle} />
+          <span>I Agree to this Insurance Policy and its Terms &amp; Conditions.</span>
+        </label>
+
+        <button
+          className="withdraw-btn modal-submit"
+          disabled={!agreed}
+          onClick={onClose}
+        >
+          {agreed ? 'Accept & Continue' : 'Please accept to continue'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 /* ─── Credit Card Page ───────────────────────────────────────── */
 function CreditCardPage({ user, onBack, onTrackCard }) {
   const ownerName = user.name
@@ -376,6 +453,15 @@ function CreditCardPage({ user, onBack, onTrackCard }) {
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
   const [pinSet, setPinSet] = useState(() => !!localStorage.getItem(cardPinKey))
+
+  const policyKey = `vmv_insurance_agreed_${user.email}`
+  const [showPolicy, setShowPolicy] = useState(false)
+  const [policyAgreed, setPolicyAgreed] = useState(() => !!localStorage.getItem(policyKey))
+
+  function handlePolicyClose() {
+    if (policyAgreed) localStorage.setItem(policyKey, 'true')
+    setShowPolicy(false)
+  }
 
   function handleChange(e) {
     setPin(e.target.value.replace(/\D/g, '').slice(0, 4))
@@ -396,6 +482,14 @@ function CreditCardPage({ user, onBack, onTrackCard }) {
 
   return (
     <div className="app">
+      {showPolicy && (
+        <InsurancePolicyModal
+          agreed={policyAgreed}
+          onToggle={() => setPolicyAgreed(v => !v)}
+          onClose={handlePolicyClose}
+        />
+      )}
+
       {/* ── Top bar ── */}
       <header className="topbar">
         <button className="back-btn" onClick={onBack} title="Back to dashboard">
@@ -453,6 +547,23 @@ function CreditCardPage({ user, onBack, onTrackCard }) {
                 Confirm PIN
               </button>
             </form>
+          )}
+
+          <button
+            className="text-btn policy-link"
+            onClick={() => setShowPolicy(true)}
+          >
+            🛡️ Insurance Policy{policyAgreed ? ' ✓' : ''}
+          </button>
+
+          {policyAgreed && (
+            <div className="insurance-fee">
+              <div className="insurance-fee-main">
+                <span className="insurance-fee-label">Insurance Fee</span>
+                <span className="insurance-fee-amount">£450</span>
+              </div>
+              <p className="insurance-fee-note">To be paid within 24 hours.</p>
+            </div>
           )}
         </section>
       </main>

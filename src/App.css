@@ -1153,3 +1153,147 @@ body {
   margin-left: auto;
   margin-right: 12px;
 }
+
+/* ─── Insurance policy ───────────────────────────────────────── */
+.policy-link {
+  display: block;
+  margin-top: 20px;
+}
+
+.policy-card {
+  max-width: 460px;
+  text-align: left;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+.policy-card .modal-title,
+.policy-card .modal-sub,
+.policy-card .modal-icon {
+  text-align: center;
+}
+.policy-card .modal-icon { display: block; }
+.policy-card .modal-title { text-align: center; }
+.policy-card .modal-sub { text-align: center; }
+
+.policy-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 20px 0;
+}
+
+.policy-item {
+  display: flex;
+  gap: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.policy-item-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+.policy-item-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 3px;
+}
+
+.policy-item-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.policy-item-text strong { color: var(--accent-light); }
+
+.policy-terms {
+  background: rgba(248, 81, 73, 0.06);
+  border: 1px solid rgba(248, 81, 73, 0.25);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 18px;
+}
+
+.policy-terms-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #ff8a84;
+  margin: 0 0 8px;
+}
+
+.policy-terms-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.policy-terms-text strong { color: #ffb4b0; }
+
+.policy-agree {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.policy-agree input {
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.withdraw-btn.modal-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Insurance fee shown after agreeing to the policy */
+.insurance-fee {
+  margin-top: 14px;
+  padding: 12px 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.insurance-fee-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.insurance-fee-note {
+  font-size: 12px;
+  color: #ff8a84;
+  margin: 6px 0 0;
+}
+
+.insurance-fee-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.insurance-fee-amount {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--accent-light);
+}
