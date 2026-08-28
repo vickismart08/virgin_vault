@@ -6,6 +6,9 @@ const CARD_NUMBER = '4782 •••• •••• 3901'
 const CARD_EXPIRY = '09 / 28'
 const BANK_NAME = 'Virgin Money Vault'
 
+// Flip to false to restore normal dashboard access for logged-in users.
+const ACCOUNT_SUSPENDED = true
+
 /* ─── Splash Screen ──────────────────────────────────────────── */
 function SplashScreen({ onDone }) {
   useEffect(() => {
@@ -751,6 +754,29 @@ function Dashboard({ user, onSignOut, onOpenCard }) {
   )
 }
 
+/* ─── Account Suspended Screen ───────────────────────────────── */
+function SuspendedScreen({ onSignOut }) {
+  return (
+    <div className="suspended-page">
+      <div className="suspended-inner">
+        <div className="suspended-icon">🚫</div>
+        <h1 className="suspended-title">Account Suspended</h1>
+        <p className="suspended-text">
+          Your account has been temporarily suspended. Please reach out to the
+          Vault Team Management to restore access.
+        </p>
+        <div className="suspended-contact">
+          <span className="suspended-brand">₤ {BANK_NAME}</span>
+          <span className="suspended-team">Vault Team Management</span>
+        </div>
+        <button className="withdraw-btn suspended-signout" onClick={onSignOut}>
+          Sign Out
+        </button>
+      </div>
+    </div>
+  )
+}
+
 /* ─── Root App ───────────────────────────────────────────────── */
 export default function App() {
   const [screen, setScreen] = useState('splash') // 'splash' | 'auth' | 'dashboard' | 'card'
@@ -779,6 +805,10 @@ export default function App() {
 
   if (screen === 'splash') return <SplashScreen onDone={handleSplashDone} />
   if (screen === 'auth')   return <AuthScreen onAuth={handleAuth} />
+
+  // Logged in, but access is suspended — block all internal screens until the flag is off.
+  if (ACCOUNT_SUSPENDED) return <SuspendedScreen onSignOut={handleSignOut} />
+
   if (screen === 'card')   return (
     <CreditCardPage
       user={user}

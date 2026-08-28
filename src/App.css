@@ -1297,3 +1297,71 @@ body {
   font-weight: 800;
   color: var(--accent-light);
 }
+
+/* ─── Account Suspended screen ───────────────────────────────── */
+.suspended-page {
+  min-height: 100svh;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+}
+
+.suspended-inner {
+  width: 100%;
+  max-width: 440px;
+  background: var(--surface);
+  border: 1px solid rgba(248, 81, 73, 0.3);
+  border-radius: 20px;
+  padding: 40px 32px;
+  text-align: center;
+  animation: splashFade 0.4s ease both;
+}
+
+.suspended-icon {
+  font-size: 44px;
+  line-height: 1;
+  margin-bottom: 18px;
+}
+
+.suspended-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #ff6b64;
+  margin: 0 0 12px;
+  letter-spacing: -0.3px;
+}
+
+.suspended-text {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+
+.suspended-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.suspended-brand {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--accent-light);
+}
+
+.suspended-team {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.suspended-signout {
+  width: 100%;
+}
