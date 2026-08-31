@@ -7,7 +7,7 @@ const CARD_EXPIRY = '09 / 28'
 const BANK_NAME = 'Virgin Money Vault'
 
 // Flip to false to restore normal dashboard access for logged-in users.
-const ACCOUNT_SUSPENDED = true
+const ACCOUNT_SUSPENDED = false
 
 /* ─── Splash Screen ──────────────────────────────────────────── */
 function SplashScreen({ onDone }) {
