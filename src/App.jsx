@@ -656,11 +656,7 @@ function Dashboard({ user, onSignOut, onOpenCard }) {
       </header>
 
       {/* ── Notification banner ── */}
-      {timeLeft <= 0 ? (
-        <div className="notif-banner notif-locked">
-          <span className="vault-locked">reviving!</span>
-        </div>
-      ) : (
+      {timeLeft > 0 && (
         <div className="notif-banner">
           <span className="notif-bell">🔔</span>
           <span className="notif-text">
