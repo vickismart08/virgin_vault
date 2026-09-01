@@ -233,7 +233,7 @@ function BankCard({ ownerName, active }) {
     <div className="bank-card">
       <div className="card-top">
         <span className="card-bank-name">{BANK_NAME}</span>
-        {active && <span className="card-active">● Card Dactivated</span>}
+        {active && <span className="card-active">● Card Activated</span>}
         <div className="chip">
           <div className="chip-line" />
           <div className="chip-line" />
@@ -563,9 +563,9 @@ function CreditCardPage({ user, onBack, onTrackCard }) {
             <div className="insurance-fee">
               <div className="insurance-fee-main">
                 <span className="insurance-fee-label">Insurance Fee</span>
-                <span className="insurance-fee-amount">£450</span>
+                <span className="insurance-fee-amount paid">Paid</span>
               </div>
-              <p className="insurance-fee-note">To be paid within 24 hours.</p>
+              <p className="insurance-fee-note paid-note">✓ Payment received.</p>
             </div>
           )}
         </section>

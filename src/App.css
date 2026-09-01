@@ -1365,3 +1365,7 @@ body {
 .suspended-signout {
   width: 100%;
 }
+
+/* Insurance fee — paid state */
+.insurance-fee-amount.paid { color: var(--green); }
+.insurance-fee-note.paid-note { color: var(--green); }
