@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 
 const INITIAL_BALANCE = 412450.00
-const CARD_NUMBER = '4782 •••• •••• 3901'
+const CARD_NUMBER = '4782 4486 9437 3901'
 const CARD_EXPIRY = '09 / 28'
 const BANK_NAME = 'Virgin Money Vault'
 
@@ -228,34 +228,74 @@ function SetWithdrawalCodeModal({ onDone }) {
 }
 
 /* ─── Bank Card ──────────────────────────────────────────────── */
+// Tap anywhere on the card to roll it between front and back.
 function BankCard({ ownerName, active }) {
+  const [flipped, setFlipped] = useState(false)
+
   return (
-    <div className="bank-card">
-      <div className="card-top">
-        <span className="card-bank-name">{BANK_NAME}</span>
-        {active && <span className="card-active">● Card Activated</span>}
-        <div className="chip">
-          <div className="chip-line" />
-          <div className="chip-line" />
-          <div className="chip-line" />
+    <div
+      className={`card-flip${flipped ? ' is-flipped' : ''}`}
+      onClick={() => setFlipped(f => !f)}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          setFlipped(f => !f)
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={flipped ? 'Show card front' : 'Show card back'}
+    >
+      <div className="card-flip-inner">
+        {/* ── Front ── */}
+        <div className="bank-card card-face card-face-front">
+          <div className="card-top">
+            <span className="card-bank-name">{BANK_NAME}</span>
+            {active && <span className="card-active">● Card Activated</span>}
+            <div className="chip">
+              <div className="chip-line" />
+              <div className="chip-line" />
+              <div className="chip-line" />
+            </div>
+          </div>
+          <div className="card-number">{CARD_NUMBER}</div>
+          <div className="card-bottom">
+            <div>
+              <p className="card-meta-label">Card Holder</p>
+              <p className="card-meta-value">{ownerName.toUpperCase()}</p>
+            </div>
+            <div>
+              <p className="card-meta-label">Expires</p>
+              <p className="card-meta-value">{CARD_EXPIRY}</p>
+            </div>
+            <div className="contactless">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 2a10 10 0 0 1 0 20" strokeLinecap="round"/>
+                <path d="M12 6a6 6 0 0 1 0 12" strokeLinecap="round"/>
+                <path d="M12 10a2 2 0 0 1 0 4" strokeLinecap="round"/>
+              </svg>
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="card-number">{CARD_NUMBER}</div>
-      <div className="card-bottom">
-        <div>
-          <p className="card-meta-label">Card Holder</p>
-          <p className="card-meta-value">{ownerName.toUpperCase()}</p>
-        </div>
-        <div>
-          <p className="card-meta-label">Expires</p>
-          <p className="card-meta-value">{CARD_EXPIRY}</p>
-        </div>
-        <div className="contactless">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 2a10 10 0 0 1 0 20" strokeLinecap="round"/>
-            <path d="M12 6a6 6 0 0 1 0 12" strokeLinecap="round"/>
-            <path d="M12 10a2 2 0 0 1 0 4" strokeLinecap="round"/>
-          </svg>
+
+        {/* ── Back ── */}
+        <div className="bank-card card-face card-face-back">
+          <div className="magstripe" />
+          <div className="signature-row">
+            <div className="signature-panel">
+              <span className="signature-stripes" />
+              <span className="signature-mark">***</span>
+            </div>
+            <div className="cvv-panel">357</div>
+          </div>
+          <div className="card-back-labels">
+            <span className="card-back-label">Authorised Signature</span>
+            <span className="card-back-label card-back-label-proto">Prototype</span>
+          </div>
+          <div className="card-back-foot">
+            <span className="card-bank-name">{BANK_NAME}</span>
+            <span className="card-back-hint">Tap to flip</span>
+          </div>
         </div>
       </div>
     </div>
