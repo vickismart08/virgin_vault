@@ -959,6 +959,18 @@ body {
   to   { transform: scale(1);   opacity: 1; }
 }
 
+.processing-pending-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 28px;
+  border-radius: 50%;
+  background: var(--accent-glow);
+  border: 2px solid var(--accent);
+  font-size: 28px;
+  line-height: 60px;
+  animation: processing-pop 0.4s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
 .processing-title {
   font-size: 22px;
   font-weight: 700;
@@ -1045,7 +1057,26 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .processing-spinner { animation-duration: 2s; }
   .processing-check,
+  .processing-pending-icon,
   .processing-step.active .processing-step-dot { animation: none; }
+}
+
+/* ─── Pending transaction ───────────────────────────────────── */
+.transaction-item.is-pending .tx-amount { opacity: 0.65; }
+
+.tx-pending-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: var(--accent-glow);
+  border: 1px solid rgba(201, 168, 76, 0.4);
+  color: var(--accent-light);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  vertical-align: middle;
 }
 
 .quick-amounts {

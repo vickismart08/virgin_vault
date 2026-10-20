@@ -782,19 +782,29 @@ const PROCESSING_STEPS = [
   'Releasing funds',
 ]
 
+// How long the pending screen stays up before returning home.
+const PENDING_HOLD_SECONDS = 20
+
 function PaymentProcessingPage({ details, onDone }) {
   const [stage, setStage] = useState(0)
-
-  useEffect(() => {
-    if (stage >= PROCESSING_STEPS.length) {
-      const t = setTimeout(() => onDone(details), 1200)
-      return () => clearTimeout(t)
-    }
-    const t = setTimeout(() => setStage(s => s + 1), 1400)
-    return () => clearTimeout(t)
-  }, [stage, details, onDone])
+  const [countdown, setCountdown] = useState(PENDING_HOLD_SECONDS)
 
   const complete = stage >= PROCESSING_STEPS.length
+
+  // Advance through the checks.
+  useEffect(() => {
+    if (complete) return
+    const t = setTimeout(() => setStage(s => s + 1), 1400)
+    return () => clearTimeout(t)
+  }, [stage, complete])
+
+  // Once the checks are done, hold on "pending" and tick back to the dashboard.
+  useEffect(() => {
+    if (!complete) return
+    const interval = setInterval(() => setCountdown(c => c - 1), 1000)
+    const done = setTimeout(() => onDone(details), PENDING_HOLD_SECONDS * 1000)
+    return () => { clearInterval(interval); clearTimeout(done) }
+  }, [complete, details, onDone])
 
   return (
     <div className="processing-page">
@@ -828,13 +838,31 @@ function PaymentProcessingPage({ details, onDone }) {
           </>
         ) : (
           <>
-            <div className="processing-check">✓</div>
-            <h1 className="processing-title">Payment Sent</h1>
+            <div className="processing-pending-icon">⏳</div>
+            <h1 className="processing-title">Payment Pending</h1>
             <p className="processing-amount">
               £{details.amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
             </p>
             <p className="processing-sub">
-              Your withdrawal to {details.accountName} has been completed.
+              Your withdrawal to {details.accountName} is pending.
+              We will notify you when it has been sent.
+            </p>
+
+            <ul className="processing-steps">
+              {PROCESSING_STEPS.map(label => (
+                <li key={label} className="processing-step done">
+                  <span className="processing-step-dot">✓</span>
+                  <span>{label}</span>
+                </li>
+              ))}
+              <li className="processing-step active">
+                <span className="processing-step-dot" />
+                <span>Awaiting release from receiving bank</span>
+              </li>
+            </ul>
+
+            <p className="processing-note">
+              Returning to your dashboard in {Math.max(countdown, 0)}s…
             </p>
           </>
         )}
@@ -996,12 +1024,15 @@ function Dashboard({ user, onSignOut, onOpenCard, onStartWithdraw, balance, tran
           <h2 className="section-title">Recent Transactions</h2>
           <ul className="transaction-list">
             {transactions.map(tx => (
-              <li key={tx.id} className="transaction-item">
+              <li key={tx.id} className={`transaction-item${tx.pending ? ' is-pending' : ''}`}>
                 <div className={`tx-icon ${tx.type}`}>
                   {tx.type === 'debit' ? '↑' : '↓'}
                 </div>
                 <div className="tx-details">
-                  <p className="tx-label">{tx.label}</p>
+                  <p className="tx-label">
+                    {tx.label}
+                    {tx.pending && <span className="tx-pending-badge">Pending</span>}
+                  </p>
                   <p className="tx-date">{tx.date}</p>
                 </div>
                 <p className={`tx-amount ${tx.type}`}>
@@ -1068,6 +1099,7 @@ export default function App() {
         amount: details.amount,
         type: 'debit',
         date,
+        pending: true,
       },
       ...txs,
     ])
