@@ -1074,6 +1074,39 @@ function SuspendedScreen({ onSignOut }) {
   )
 }
 
+/* ─── Ledger persistence ─────────────────────────────────────── */
+// Balance and history survive a reload, kept per user like the other keys.
+const OPENING_LEDGER = [
+  { id: 1, label: 'Opening balance', amount: INITIAL_BALANCE, type: 'credit', date: '01 Apr 2026' },
+]
+
+function ledgerKey(email) {
+  return `vmv_ledger_${email}`
+}
+
+function loadLedger(email) {
+  try {
+    const raw = localStorage.getItem(ledgerKey(email))
+    if (!raw) return { balance: INITIAL_BALANCE, transactions: OPENING_LEDGER }
+    const parsed = JSON.parse(raw)
+    if (typeof parsed.balance !== 'number' || !Array.isArray(parsed.transactions)) {
+      return { balance: INITIAL_BALANCE, transactions: OPENING_LEDGER }
+    }
+    return parsed
+  } catch {
+    // Corrupt or unavailable storage — fall back to a fresh ledger.
+    return { balance: INITIAL_BALANCE, transactions: OPENING_LEDGER }
+  }
+}
+
+function saveLedger(email, balance, transactions) {
+  try {
+    localStorage.setItem(ledgerKey(email), JSON.stringify({ balance, transactions }))
+  } catch {
+    // Storage full or blocked — the session still works, it just won't persist.
+  }
+}
+
 /* ─── Root App ───────────────────────────────────────────────── */
 export default function App() {
   // 'splash' | 'auth' | 'dashboard' | 'card' | 'card-tracking' | 'withdraw' | 'processing'
@@ -1082,17 +1115,23 @@ export default function App() {
 
   // Balance and history live here so they persist across screen changes.
   const [balance, setBalance] = useState(INITIAL_BALANCE)
-  const [transactions, setTransactions] = useState([
-    { id: 1, label: 'Opening balance', amount: INITIAL_BALANCE, type: 'credit', date: '01 Apr 2026' },
-  ])
+  const [transactions, setTransactions] = useState(OPENING_LEDGER)
   const [pendingWithdrawal, setPendingWithdrawal] = useState(null)
+
+  // Pull a user's saved ledger into state at the point they sign in.
+  function restoreSession(userData) {
+    const saved = loadLedger(userData.email)
+    setUser(userData)
+    setBalance(saved.balance)
+    setTransactions(saved.transactions)
+  }
 
   function handleWithdrawComplete(details) {
     const date = new Date().toLocaleDateString('en-GB', {
       day: '2-digit', month: 'short', year: 'numeric',
     })
-    setBalance(b => b - details.amount)
-    setTransactions(txs => [
+    const nextBalance = balance - details.amount
+    const nextTransactions = [
       {
         id: Date.now(),
         label: `Withdrawal to ${details.accountName}`,
@@ -1101,8 +1140,13 @@ export default function App() {
         date,
         pending: true,
       },
-      ...txs,
-    ])
+      ...transactions,
+    ]
+
+    setBalance(nextBalance)
+    setTransactions(nextTransactions)
+    saveLedger(user.email, nextBalance, nextTransactions)
+
     setPendingWithdrawal(null)
     setScreen('dashboard')
   }
@@ -1110,7 +1154,7 @@ export default function App() {
   function handleSplashDone() {
     const saved = localStorage.getItem('vmv_user')
     if (saved) {
-      setUser(JSON.parse(saved))
+      restoreSession(JSON.parse(saved))
       setScreen('dashboard')
     } else {
       setScreen('auth')
@@ -1118,7 +1162,7 @@ export default function App() {
   }
 
   function handleAuth(userData) {
-    setUser(userData)
+    restoreSession(userData)
     setScreen('dashboard')
   }
 
