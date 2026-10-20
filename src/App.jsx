@@ -618,17 +618,238 @@ function CreditCardPage({ user, onBack, onTrackCard }) {
   )
 }
 
+/* ─── Withdrawal Details Page ────────────────────────────────── */
+const MIN_WITHDRAWAL = 10000
+
+function WithdrawDetailsPage({ user, onBack, onContinue }) {
+  const ownerName = user.name
+  const [accountNumber, setAccountNumber] = useState('')
+  const [sortCode, setSortCode] = useState('')
+  const [accountName, setAccountName] = useState('')
+  const [amount, setAmount] = useState('')
+  const [error, setError] = useState('')
+
+  // 12-34-56 — insert the dashes as the user types
+  function handleSortCode(e) {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 6)
+    const parts = digits.match(/.{1,2}/g) || []
+    setSortCode(parts.join('-'))
+    setError('')
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault()
+
+    if (!/^\d{8}$/.test(accountNumber.trim())) {
+      setError('Account number must be 8 digits.')
+      return
+    }
+    if (!/^\d{2}-\d{2}-\d{2}$/.test(sortCode.trim())) {
+      setError('Sort code must be 6 digits, e.g. 12-34-56.')
+      return
+    }
+    if (accountName.trim().length < 2) {
+      setError('Please enter the account holder name.')
+      return
+    }
+
+    const value = parseFloat(amount)
+    if (!Number.isFinite(value) || value <= 0) {
+      setError('Please enter a valid amount.')
+      return
+    }
+    if (value < MIN_WITHDRAWAL) {
+      setError(`The minimum withdrawal amount is £${MIN_WITHDRAWAL.toLocaleString('en-GB')}.`)
+      return
+    }
+
+    setError('')
+    onContinue({
+      accountNumber: accountNumber.trim(),
+      sortCode: sortCode.trim(),
+      accountName: accountName.trim(),
+      amount: value,
+    })
+  }
+
+  return (
+    <div className="app">
+      <header className="topbar">
+        <button className="back-btn" onClick={onBack} title="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <div className="bank-brand">
+          <span className="bank-icon">₤</span>
+          <span className="bank-name">Withdraw Funds</span>
+        </div>
+        <div className="owner-info">
+          <div className="avatar">{ownerName.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()}</div>
+        </div>
+      </header>
+
+      <main className="dashboard">
+        <section className="withdraw-section">
+          <h2 className="section-title">Recipient Details</h2>
+          <p className="section-sub">
+            Enter the account you wish to withdraw to. The minimum withdrawal is
+            £{MIN_WITHDRAWAL.toLocaleString('en-GB')}.
+          </p>
+
+          <form onSubmit={handleSubmit}>
+            <div className="field">
+              <label className="field-label" htmlFor="wd-account">Account Number</label>
+              <input
+                id="wd-account"
+                className="auth-input"
+                type="text"
+                inputMode="numeric"
+                placeholder="12345678"
+                maxLength={8}
+                value={accountNumber}
+                onChange={e => {
+                  setAccountNumber(e.target.value.replace(/\D/g, '').slice(0, 8))
+                  setError('')
+                }}
+              />
+            </div>
+
+            <div className="field">
+              <label className="field-label" htmlFor="wd-sort">Sort Code</label>
+              <input
+                id="wd-sort"
+                className="auth-input"
+                type="text"
+                inputMode="numeric"
+                placeholder="12-34-56"
+                value={sortCode}
+                onChange={handleSortCode}
+              />
+            </div>
+
+            <div className="field">
+              <label className="field-label" htmlFor="wd-name">Account Name</label>
+              <input
+                id="wd-name"
+                className="auth-input"
+                type="text"
+                placeholder="A N Other"
+                value={accountName}
+                onChange={e => { setAccountName(e.target.value); setError('') }}
+              />
+            </div>
+
+            <div className="field">
+              <label className="field-label" htmlFor="wd-amount">Amount to Withdraw</label>
+              <div className="input-group">
+                <span className="input-prefix">£</span>
+                <input
+                  id="wd-amount"
+                  className="amount-input"
+                  type="number"
+                  min={MIN_WITHDRAWAL}
+                  step="0.01"
+                  placeholder="10000.00"
+                  value={amount}
+                  onChange={e => { setAmount(e.target.value); setError('') }}
+                />
+              </div>
+            </div>
+
+            {error && <p className="feedback error">{error}</p>}
+
+            <button className="withdraw-btn modal-submit" type="submit">
+              Continue
+            </button>
+          </form>
+        </section>
+      </main>
+
+      <footer className="footer">
+        <p>© 2026 {BANK_NAME} · Protected by the Financial Services Compensation Scheme (FSCS)</p>
+      </footer>
+    </div>
+  )
+}
+
+/* ─── Payment Processing Page ────────────────────────────────── */
+// Walks through the stages, then hands the completed transfer back.
+const PROCESSING_STEPS = [
+  'Verifying recipient details',
+  'Running security checks',
+  'Contacting receiving bank',
+  'Releasing funds',
+]
+
+function PaymentProcessingPage({ details, onDone }) {
+  const [stage, setStage] = useState(0)
+
+  useEffect(() => {
+    if (stage >= PROCESSING_STEPS.length) {
+      const t = setTimeout(() => onDone(details), 1200)
+      return () => clearTimeout(t)
+    }
+    const t = setTimeout(() => setStage(s => s + 1), 1400)
+    return () => clearTimeout(t)
+  }, [stage, details, onDone])
+
+  const complete = stage >= PROCESSING_STEPS.length
+
+  return (
+    <div className="processing-page">
+      <div className="processing-inner">
+        {!complete ? (
+          <>
+            <div className="processing-spinner" />
+            <h1 className="processing-title">Processing Payment</h1>
+            <p className="processing-amount">
+              £{details.amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
+            </p>
+            <p className="processing-sub">
+              to {details.accountName} · {details.sortCode} · {details.accountNumber}
+            </p>
+
+            <ul className="processing-steps">
+              {PROCESSING_STEPS.map((label, i) => (
+                <li
+                  key={label}
+                  className={`processing-step${i < stage ? ' done' : ''}${i === stage ? ' active' : ''}`}
+                >
+                  <span className="processing-step-dot">{i < stage ? '✓' : ''}</span>
+                  <span>{label}</span>
+                </li>
+              ))}
+            </ul>
+
+            <p className="processing-note">
+              Please do not close this page while your payment is being processed.
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="processing-check">✓</div>
+            <h1 className="processing-title">Payment Sent</h1>
+            <p className="processing-amount">
+              £{details.amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
+            </p>
+            <p className="processing-sub">
+              Your withdrawal to {details.accountName} has been completed.
+            </p>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 /* ─── Dashboard ──────────────────────────────────────────────── */
 // Fixed deadline — never changes for anyone, ever
 const PAYMENT_DEADLINE = new Date('2026-04-25T23:59:59').getTime()
 
-function Dashboard({ user, onSignOut, onOpenCard }) {
+function Dashboard({ user, onSignOut, onOpenCard, onStartWithdraw, balance, transactions }) {
   const ownerName = user.name
-  const [balance] = useState(INITIAL_BALANCE)
   const [withdrawAmount, setWithdrawAmount] = useState('')
-  const [transactions] = useState([
-    { id: 1, label: 'Opening balance', amount: 412450.00, type: 'credit', date: '01 Apr 2026' },
-  ])
   const [notice, setNotice] = useState('')
   const [timeLeft, setTimeLeft] = useState(PAYMENT_DEADLINE - Date.now())
 
@@ -656,8 +877,14 @@ function Dashboard({ user, onSignOut, onOpenCard }) {
   const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000)
 
   function handleWithdraw() {
-    setNotice('Only card withdrawal is available for now.')
-    setTimeout(() => setNotice(''), 4000)
+    const value = parseFloat(withdrawAmount)
+    if (Number.isFinite(value) && value > 0 && value < MIN_WITHDRAWAL) {
+      setNotice(`The minimum withdrawal amount is £${MIN_WITHDRAWAL.toLocaleString('en-GB')}.`)
+      setTimeout(() => setNotice(''), 4000)
+      return
+    }
+    // Carry any amount already typed through to the details page.
+    onStartWithdraw(Number.isFinite(value) && value > 0 ? value : null)
   }
 
   function handleKeyDown(e) {
@@ -726,7 +953,10 @@ function Dashboard({ user, onSignOut, onOpenCard }) {
         {/* ── Withdraw ── */}
         <section className="withdraw-section">
           <h2 className="section-title">Withdraw Funds</h2>
-          <p className="section-sub">Enter the amount you wish to withdraw from your account.</p>
+          <p className="section-sub">
+            Enter the amount you wish to withdraw from your account. Minimum
+            £{MIN_WITHDRAWAL.toLocaleString('en-GB')}.
+          </p>
 
           <div className="input-group">
             <span className="input-prefix">£</span>
@@ -745,13 +975,13 @@ function Dashboard({ user, onSignOut, onOpenCard }) {
           {notice && <p className="feedback notice">{notice}</p>}
 
           <div className="quick-amounts">
-            {[50, 100, 200, 500].map(amt => (
+            {[10000, 25000, 50000, 100000].map(amt => (
               <button
                 key={amt}
                 className="quick-btn"
                 onClick={() => { setWithdrawAmount(String(amt)); setNotice('') }}
               >
-                £{amt}
+                £{amt.toLocaleString('en-GB')}
               </button>
             ))}
           </div>
@@ -815,8 +1045,35 @@ function SuspendedScreen({ onSignOut }) {
 
 /* ─── Root App ───────────────────────────────────────────────── */
 export default function App() {
-  const [screen, setScreen] = useState('splash') // 'splash' | 'auth' | 'dashboard' | 'card'
+  // 'splash' | 'auth' | 'dashboard' | 'card' | 'card-tracking' | 'withdraw' | 'processing'
+  const [screen, setScreen] = useState('splash')
   const [user, setUser] = useState(null)
+
+  // Balance and history live here so they persist across screen changes.
+  const [balance, setBalance] = useState(INITIAL_BALANCE)
+  const [transactions, setTransactions] = useState([
+    { id: 1, label: 'Opening balance', amount: INITIAL_BALANCE, type: 'credit', date: '01 Apr 2026' },
+  ])
+  const [pendingWithdrawal, setPendingWithdrawal] = useState(null)
+
+  function handleWithdrawComplete(details) {
+    const date = new Date().toLocaleDateString('en-GB', {
+      day: '2-digit', month: 'short', year: 'numeric',
+    })
+    setBalance(b => b - details.amount)
+    setTransactions(txs => [
+      {
+        id: Date.now(),
+        label: `Withdrawal to ${details.accountName}`,
+        amount: details.amount,
+        type: 'debit',
+        date,
+      },
+      ...txs,
+    ])
+    setPendingWithdrawal(null)
+    setScreen('dashboard')
+  }
 
   function handleSplashDone() {
     const saved = localStorage.getItem('vmv_user')
@@ -855,11 +1112,30 @@ export default function App() {
   if (screen === 'card-tracking') return (
     <CardTrackingPage user={user} onBack={() => setScreen('card')} />
   )
+  if (screen === 'withdraw') return (
+    <WithdrawDetailsPage
+      user={user}
+      onBack={() => setScreen('dashboard')}
+      onContinue={details => {
+        setPendingWithdrawal(details)
+        setScreen('processing')
+      }}
+    />
+  )
+  if (screen === 'processing' && pendingWithdrawal) return (
+    <PaymentProcessingPage
+      details={pendingWithdrawal}
+      onDone={handleWithdrawComplete}
+    />
+  )
   return (
     <Dashboard
       user={user}
       onSignOut={handleSignOut}
       onOpenCard={() => setScreen('card')}
+      onStartWithdraw={() => setScreen('withdraw')}
+      balance={balance}
+      transactions={transactions}
     />
   )
 }

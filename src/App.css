@@ -896,6 +896,158 @@ body {
   border: 1px solid rgba(63, 185, 80, 0.25);
 }
 
+/* ─── Withdrawal form fields ────────────────────────────────── */
+.field {
+  margin-bottom: 16px;
+}
+
+.field-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  margin-bottom: 7px;
+}
+
+/* ─── Payment processing page ───────────────────────────────── */
+.processing-page {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.processing-inner {
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.processing-spinner {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 28px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: processing-spin 0.9s linear infinite;
+}
+
+@keyframes processing-spin {
+  to { transform: rotate(360deg); }
+}
+
+.processing-check {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 28px;
+  border-radius: 50%;
+  background: rgba(63, 185, 80, 0.12);
+  border: 2px solid var(--green);
+  color: var(--green);
+  font-size: 32px;
+  line-height: 60px;
+  animation: processing-pop 0.4s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+@keyframes processing-pop {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.processing-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.processing-amount {
+  font-size: 34px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -1px;
+  margin-bottom: 8px;
+}
+
+.processing-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.processing-steps {
+  list-style: none;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 20px;
+}
+
+.processing-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  transition: color 0.3s;
+}
+
+.processing-step.done { color: var(--text); }
+
+.processing-step.active {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.processing-step-dot {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  font-size: 11px;
+  line-height: 16px;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.processing-step.done .processing-step-dot {
+  background: var(--green);
+  border-color: var(--green);
+  color: #0d1117;
+}
+
+.processing-step.active .processing-step-dot {
+  border-color: var(--accent);
+  animation: processing-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes processing-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+  50%      { box-shadow: 0 0 0 6px transparent; }
+}
+
+.processing-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .processing-spinner { animation-duration: 2s; }
+  .processing-check,
+  .processing-step.active .processing-step-dot { animation: none; }
+}
+
 .quick-amounts {
   display: flex;
   gap: 8px;
@@ -904,8 +1056,10 @@ body {
 }
 
 .quick-btn {
-  flex: 1 1 calc(25% - 8px);
-  padding: 8px 0;
+  /* Two per row — the five/six-figure labels need the width */
+  flex: 1 1 calc(50% - 8px);
+  padding: 8px 4px;
+  white-space: nowrap;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 8px;
